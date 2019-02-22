@@ -1,1 +1,1 @@
-module.exports = () => console.log(process.argv); 
+module.exports = () => console.log(process.argv.splice(2)); 
