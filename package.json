@@ -10,5 +10,9 @@
   "license": "ISC",
   "bin": {
     "zs50": "bin/zs50"
+  },
+  "dependencies": {
+    "colors": "^1.3.3",
+    "commander": "^2.19.0"
   }
 }
