@@ -7,8 +7,8 @@ class AuthEmitter extends events {
     constructor(dotEnvObject){
         super();
         if(dotEnvObject.parsed){
-            // TODO load vars
-            this.auth = dotEnvObject; 
+            // TODO validate all necessary settings
+            this.auth = dotEnvObject.parsed; 
         } else {
             this.noAuth = true; 
         }
