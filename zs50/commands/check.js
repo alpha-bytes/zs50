@@ -7,6 +7,8 @@ module.exports = function(pset, options) {
     // append command calls
     // send to execute anonymous endpoint in Tooling API
     // evaluate response and report back to user
+    console.log(pset); 
+    console.log(options);
 
     process.exit(0);
 }

@@ -5,6 +5,12 @@ const readline = require('readline');
 const auth = require('./utils/auth');  
 const check = require('./commands/check');
 
+// establish listener for new credentials, emitted on auth.getCredentials()
+auth.on('auth', function(credentials){
+	console.log(credentials);
+	process.exit(0); 
+}); 
+
 // instantiate interface for collecting user input
 process.stdin.setEncoding('utf-8');
 const rl = readline.createInterface({
@@ -12,17 +18,25 @@ const rl = readline.createInterface({
 	output: process.stdout
 });
 
-function getInput(msg){
-	msg = msg ? msg + ' ' : 'Provide Input: '; 
-	rl.question(msg, (input) => {
-		console.log(input); 
-	});
-}
+// TODO modularize to commands folder
+function getAuthStatus(options){
 
-function getAuthStatus(){
-	if(!auth.getAuthStatus()){
-		// TODO needs to utilize event listener
-		const getCred = getInput(colors.red('No org linked for ZS50. Authorize now (Y|N)?')); 
+	// if reauth called explicitly, set it off
+	if(options.reauth)
+		auth.getCredentials(); 
+
+	// if requires re-auth, offer user choice to do so now
+	if(auth.requiresAuth){
+		rl.question(colors.red('No authorized dev org linked for ZS50. Authorize now? (Y/N) '), (answer) => {
+			if(answer === 'Y' || answer === 'y'){
+				auth.getCredentials();
+			} else{
+				process.exit(0); 
+			}
+		}); 
+	} else {
+		console.log(credentials);
+		process.exit(0);
 	}
 }
 
@@ -38,6 +52,7 @@ module.exports = () => {
 	program
 		.command('auth')
 		.description('Provides information on authorization status of linked org.')
+		.option('-r, --reauth', 'Overwrite existing authorization with new credentials.')
 		.action(getAuthStatus);
 		 
 
