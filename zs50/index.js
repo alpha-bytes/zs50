@@ -1,44 +1,6 @@
-const colors = require('colors'); 
-const program = require('commander');
-const readline = require('readline'); 
-// own modules
-const auth = require('./utils/auth');  
+const auth = require('./commands/auth');  
 const check = require('./commands/check');
-
-// establish listener for new credentials, emitted on auth.getCredentials()
-auth.on('auth', function(credentials){
-	console.log(credentials);
-	process.exit(0); 
-}); 
-
-// instantiate interface for collecting user input
-process.stdin.setEncoding('utf-8');
-const rl = readline.createInterface({
-	input: process.stdin, 
-	output: process.stdout
-});
-
-// TODO modularize to commands folder
-function getAuthStatus(options){
-
-	// if reauth called explicitly, set it off
-	if(options.reauth)
-		auth.getCredentials(); 
-
-	// if requires re-auth, offer user choice to do so now
-	if(auth.requiresAuth){
-		rl.question(colors.red('No authorized dev org linked for ZS50. Authorize now? (Y/N) '), (answer) => {
-			if(answer === 'Y' || answer === 'y'){
-				auth.getCredentials();
-			} else{
-				process.exit(0); 
-			}
-		}); 
-	} else {
-		console.log(credentials);
-		process.exit(0);
-	}
-}
+const program = require('commander'); 
 
 module.exports = () => {
 
@@ -53,7 +15,7 @@ module.exports = () => {
 		.command('auth')
 		.description('Provides information on authorization status of linked org.')
 		.option('-r, --reauth', 'Overwrite existing authorization with new credentials.')
-		.action(getAuthStatus);
+		.action(auth.getAuthStatus);
 		 
 
 	program.parse(process.argv); 
