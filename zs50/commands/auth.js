@@ -10,7 +10,7 @@ function handleSuccess(creds){
 }
 
 function handleErr(err){
-    stdio.warn(`Awww shucks. Something unexpected happened: ${err.msg}`); 
+    stdio.err(`Awww shucks. Something unexpected happened: ${err.msg}`); 
     process.exit(1);
 }
 

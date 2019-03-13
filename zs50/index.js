@@ -9,6 +9,7 @@ module.exports = () => {
 		.command('check <pset>')
 		.description('Evaluates the code for the provided pset and returns a response.')
 		.option('-r, --root-directory <path>', 'If the pset Apex files are stored locally, as when using the SFDX flow, the path to the source files.')
+		.option('-v, --verbose', 'Turns on verbose debugging.')
 		.action(check); 
 
 	program

@@ -4,9 +4,14 @@ const axios = require('axios').default;
 const stdio = require('./stdio'); 
 const defaults = require('../config/defaults'); 
 
-const REQ_MSG = 'Org authorization required. Use command "zs50 auth -r" to authorize a Salesforce dev org.';
-const urlQueryApex = `services/data/v${defaults.version}/tooling/query?q=SELECT body FROM ApexClass WHERE name = \'%%\'`; 
 let access_token, instance_url; 
+const REQ_MSG = 'Org authorization required. Use command "zs50 auth -r" to authorize a Salesforce dev org.';
+/* tooling api endpoints */
+const tooling_base = `services/data/v${defaults.version}/tooling`; 
+const tooling_query = `${tooling_base}/query?q=SELECT body FROM ApexClass WHERE name = \'%%\'`;
+const tooling_execAnon = `${tooling_base}/executeAnonymous?anonymousBody=%%`; 
+
+// TODO event emitter / subscriber for any axios response which fails due to auth, and refresh the token
 
 /**
  * Validates authorization is available. 
@@ -22,14 +27,14 @@ function validateAuth(){
                         instance_url = creds.instance_url; 
                         resolve(true); 
                     }).catch((err) => {
-                        stdio.warn(`Blast! We've had an error: ${err.message}`); 
+                        stdio.err(`Blast! We've had an error: ${err.message}`); 
                         reject(err); 
                     }); 
                 } else{
                     resolve(false); 
                 }
             }).catch((err) => {
-                stdio.warn(`Shoot. Encountered the following error:\n${err.message}.`); 
+                stdio.err(`Shoot. Encountered the following error:\n${err.message}.`); 
                 process.exit(1); 
             });
         } else{
@@ -45,7 +50,7 @@ async function _getApex(className){
         let resp = await axios({
             method: 'get',
             baseURL: instance_url, 
-            url: encodeURI(urlQueryApex.replace('%%', className)), 
+            url: encodeURI(tooling_query.replace('%%', className)), 
             headers: {
                 'Authorization': `Bearer ${access_token}`, 
                 'Content-Type': 'application/json'
@@ -58,6 +63,33 @@ async function _getApex(className){
         }
     } catch(e){
         throw e;  
+    }
+}
+
+async function _executeAnonApex(anonApex){
+    try{
+        let resp = await axios({
+            method: 'get',
+            baseURL: instance_url, 
+            url: encodeURI(tooling_execAnon.replace('%%', anonApex)), 
+            headers: {
+                'Authorization': `Bearer ${access_token}`, 
+                'Content-Type': 'application/json'
+            }
+        }); 
+        const data = resp.data;  
+        if(data.compiled && data.success){
+            return data; 
+        } else{
+            let e = new Error(data.compiled ? data.exceptionMessage : data.compileProblem);
+            e.salesforceResponse = data; 
+            throw e; 
+        }
+    } catch(e){
+        if(e.salesforceResponse)   
+            throw e; 
+
+        throw new Error(`Unable to execute Apex due to the following error: ${e.message}`);
     }
 }
 
@@ -77,3 +109,5 @@ module.exports.getApex = async (className) => {
         throw new Error(REQ_MSG);  
     }
 }
+
+module.exports.executeAnonApex = _executeAnonApex; 

@@ -5,9 +5,10 @@ const readline = require('readline');
 const MAX_TRIES = 5; 
 
 // output styling
+const style_err = colors.bgRed; 
 const style_highlight = colors.bgMagenta; 
-const style_input = colors.yellow; 
-const style_warn = colors.bgRed;
+const style_input = colors.cyan;  
+const style_warn = colors.yellow;
 
 // instantiate interface for collecting user input
 process.stdin.setEncoding('utf-8');
@@ -26,7 +27,7 @@ const rl = readline.createInterface({
  * @param {number} retryCnt Number of tries remaining. Default is equal to MAX_TRIES config variable. 
  * @returns {Promise}
  */
-async function stdio(msg, level, awaitInput, validator, retryCnt = MAX_TRIES){
+async function stdio(msg, level, awaitInput = false, validator, retryCnt = MAX_TRIES){
     return new Promise(function(resolve, reject){
         try{
             if(!awaitInput){
@@ -59,14 +60,22 @@ async function stdio(msg, level, awaitInput, validator, retryCnt = MAX_TRIES){
     }); 
 }
 
+module.exports.err = (msg) => {
+    return stdio(msg, style_err); 
+}
+
 module.exports.prompt = (msg, validator) => {
     return stdio(msg, style_input, true, validator); 
 }
 
 module.exports.highlight = (msg) => {
-    return stdio(msg, style_highlight, false); 
+    return stdio(msg, style_highlight); 
+}
+
+module.exports.success = (msg = 'Success!') => {
+    return stdio(msg, colors.green); 
 }
 
 module.exports.warn = (msg) => {
-    return stdio(msg, style_warn, false); 
+    return stdio(msg, style_warn); 
 }

@@ -44,7 +44,7 @@ class AuthEmitter extends events {
             creds.pwd = await stdio.prompt('Salesforce Password: ', inputValidator); 
             creds.sec_token = await stdio.prompt('Security Token: ', inputValidator); 
         } catch(e){
-            stdio.warn(`${e.message} Exiting process.`); 
+            stdio.err(`${e.message} Exiting process.`); 
             process.exit(1);
         }
         stdio.highlight('Authorizing Salesforce Org...'); 
