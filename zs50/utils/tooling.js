@@ -2,12 +2,12 @@
 const auth = require('./auth');
 const axios = require('axios').default; 
 const stdio = require('./stdio'); 
-const defaults = require('../config/defaults'); 
+const config = require('../../config'); 
 
 let access_token, instance_url; 
 const REQ_MSG = 'Org authorization required. Use command "zs50 auth -r" to authorize a Salesforce dev org.';
 /* tooling api endpoints */
-const tooling_base = `services/data/v${defaults.version}/tooling`; 
+const tooling_base = `services/data/v${config.version}/tooling`; 
 const tooling_query = `${tooling_base}/query?q=SELECT body FROM ApexClass WHERE name = \'%%\'`;
 const tooling_execAnon = `${tooling_base}/executeAnonymous?anonymousBody=%%`; 
 
@@ -106,7 +106,9 @@ module.exports.getApex = async (className) => {
             throw e; 
         }
     } else{
-        throw new Error(REQ_MSG);  
+        let e = new Error(REQ_MSG);  
+        e.requiresAuth = true; 
+        throw e; 
     }
 }
 

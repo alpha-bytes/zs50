@@ -3,9 +3,9 @@ const dotenv = require('dotenv');
 const events = require('events'); 
 const fs = require('fs'); 
 const stdio = require('../utils/stdio'); 
-const valorg = require('../config/valorg'); 
+const oauth = require('../config/oauth'); 
 
-const ENV_PATH = process.cwd() + '/.zs50.env'; 
+const ENV_PATH = `${__dirname.replace('utils', 'config')}/.zs50.env`; 
 let auth; 
 
 class AuthEmitter extends events { 
@@ -59,8 +59,8 @@ class AuthEmitter extends events {
                 },
                 params: {
                     grant_type: 'password', 
-                    client_id: valorg.clientId, 
-                    client_secret: valorg.clientSecret, 
+                    client_id: oauth.clientId, 
+                    client_secret: oauth.clientSecret, 
                     username: creds.uname, 
                     password: `${creds.pwd}${creds.sec_token}`
                 }
@@ -81,7 +81,7 @@ class AuthEmitter extends events {
 
                 fs.writeFile(ENV_PATH, data, (err) => {
                     if(err){
-                        reject(err.message); 
+                        reject(err); 
                     } else{
                         resolve(creds); 
                     }

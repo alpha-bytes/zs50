@@ -8,6 +8,10 @@ const appended_code = '\npublic class ZS50Exception extends Exception{ }\nRetrTe
 
 module.exports = async function(pset, options) {
     // retrieve pset corresponding to arg value
+    // read file contents using fs 
+    // append command calls
+    // send to execute anonymous endpoint in Tooling API
+    // evaluate response and report back to user
     try{
         stdio.warn('Retrieving Apex...');
         let apex = await tooling.getApex('RetrTest'); 
@@ -20,6 +24,11 @@ module.exports = async function(pset, options) {
         stdio.success(); 
         process.exit(0); 
     } catch(e){
+        if(e.requiresAuth){
+            stdio.warn(e.message); 
+            process.exit(0);
+        }
+
         stdio.err(`Well darn it. We encountered the following error: ${e.message}`);
         if(options.verbose){
             stdio.err(e); 
@@ -36,9 +45,4 @@ module.exports = async function(pset, options) {
             });
         }
     }
-
-    // read file contents using fs 
-    // append command calls
-    // send to execute anonymous endpoint in Tooling API
-    // evaluate response and report back to user
 }
