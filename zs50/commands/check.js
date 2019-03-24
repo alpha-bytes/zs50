@@ -1,13 +1,46 @@
+const axios = require('axios').default;
 const bash = require('child_process').exec; 
 const fs = require('fs');
 const stdio = require('../utils/stdio');
 const tooling = require('../utils/tooling');
+const yaml = require('yaml');
+
+// instantiate var for psets, and get them
+const location = require('../utils/config').psetUrl; 
+let psets;
+
+async function getPsets(){
+    if(psets)
+        return; 
+
+    try{
+        // get psetfile, disallowing caching
+        const psetFile = await axios.get(location, { headers: { 'Cache-Control': 'no-cache' } }); 
+        psets = yaml.parse(psetFile.data); 
+    } catch(e){
+        throw e; 
+    }
+}
 
 // TODO get dynamically from gist
 const appended_code = '\npublic class ZS50Exception extends Exception{ }\nRetrTest rt = new RetrTest(); if(rt.getVal() != \'hello, world\'){ throw new zs50Exception(\'must equal hello, world.\'); }'; 
 
 module.exports = async function(pset, options) {
-    // retrieve pset corresponding to arg value
+    
+    // ensure we have psets for validation
+    try{
+        await getPsets(); 
+    } catch(e){
+        stdio.err(`Could not retrieve pset validations due to exception: ${e.message}`); 
+        process.exit(1);
+    }
+
+    // retrieve pset corresponding to arg value, or exit if not found
+    if(!psets[pset]){
+        stdio.err(`Could not find a pset for value ${pset}. Make sure spelling and capitilization are correct, and try again.`); 
+        process.exit(1); 
+    }
+
     // read file contents using fs 
     // append command calls
     // send to execute anonymous endpoint in Tooling API

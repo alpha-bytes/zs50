@@ -3,7 +3,7 @@
 # Salesforce API version 
 apiVersion: "45.0"
 
-# May be 'local' if source Apex will be written locally, or 'cloud' if source should be retrieved from authorized dev org
+# May be 'local' if source Apex will be written locally, or 'cloud' if source should be retrieved from authorized Salesforce dev org
 mode: "local"
 
 # Location of psets.yaml file that defines how psets will be checked; typically a github raw url
