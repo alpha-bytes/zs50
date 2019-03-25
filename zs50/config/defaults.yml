@@ -9,7 +9,7 @@ mode: "local"
 # Location of psets.yaml file that defines how psets will be checked; typically a github raw url
 psetUrl: "https://raw.githubusercontent.com/alpha-bytes/zs50-content/master/psets/psets.yaml"
 
-# direcotry where local classes are stored, relative to present working directory
-classDir: "./classes"
+# direcotry where local classes are stored, relative to present working directory. "./" should not be included as it is implicit
+classDir: "classes"
 
 ...

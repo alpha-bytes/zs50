@@ -47,56 +47,60 @@ class AuthEmitter extends events {
             stdio.err(`${e.message} Exiting process.`); 
             process.exit(1);
         }
-        stdio.highlight('Authorizing Salesforce Org...'); 
-        return new Promise((resolve, reject) => {
-            // obtain access token
-            const resp = axios({
-                method: 'post', 
-                url: '/services/oauth2/token', 
-                baseURL: 'https://login.salesforce.com',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                params: {
-                    grant_type: 'password', 
-                    client_id: oauth.clientId, 
-                    client_secret: oauth.clientSecret, 
-                    username: creds.uname, 
-                    password: `${creds.pwd}${creds.sec_token}`
-                }
-            })
-            .then((res) => {
-                // get token and instance url
-                creds.access_token = res.data.access_token; 
-                creds.instance_url = res.data.instance_url; 
-                if(!creds.access_token || !creds.instance_url){
-                    reject(new Error(`Response did not contain ${token==null?'access token, ':''} ${url==null?'instance url.': ''}`)); 
-                }
-                // write new or update .zs50.env file
-                let data = `uname=${creds.uname}\n`; 
-                data += `pwd=${creds.pwd}\n`; 
-                data += `sec_token=${creds.sec_token}\n`; 
-                data += `access_token=${creds.access_token}\n`; 
-                data += `instance_url=${creds.instance_url}\n`;
-
-                fs.writeFile(ENV_PATH, data, (err) => {
-                    if(err){
-                        reject(err); 
-                    } else{
-                        resolve(creds); 
-                    }
-                });
-            })
-            .catch((err) => {
-                console.log(err.response.data); 
-                process.exit(1); 
-            });
-        }); 
+        stdio.highlight('Authorizing Salesforce Org...');
+        return authorize(creds);   
     }
     // method to get status
     requiresAuth(){
         return this.authReq;
     }
+}
+
+async function authorize(creds){
+    return new Promise((resolve, reject) => {
+        // obtain access token
+        const resp = axios({
+            method: 'post', 
+            url: '/services/oauth2/token', 
+            baseURL: 'https://login.salesforce.com',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            params: {
+                grant_type: 'password', 
+                client_id: oauth.clientId, 
+                client_secret: oauth.clientSecret, 
+                username: creds.uname, 
+                password: `${creds.pwd}${creds.sec_token}`
+            }
+        })
+        .then((res) => {
+            // get token and instance url
+            creds.access_token = res.data.access_token; 
+            creds.instance_url = res.data.instance_url; 
+            if(!creds.access_token || !creds.instance_url){
+                reject(new Error(`Response did not contain ${token==null?'access token, ':''} ${url==null?'instance url.': ''}`)); 
+            }
+            // write new or update .zs50.env file
+            let data = `uname=${creds.uname}\n`; 
+            data += `pwd=${creds.pwd}\n`; 
+            data += `sec_token=${creds.sec_token}\n`; 
+            data += `access_token=${creds.access_token}\n`; 
+            data += `instance_url=${creds.instance_url}\n`;
+
+            fs.writeFile(ENV_PATH, data, (err) => {
+                if(err){
+                    reject(err); 
+                } else{
+                    resolve(creds); 
+                }
+            });
+        })
+        .catch((err) => {
+            console.log(err.response.data); 
+            process.exit(1); 
+        });
+    });
 }
 
 function inputValidator(input){
