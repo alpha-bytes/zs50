@@ -1,14 +1,18 @@
 const axios = require('axios').default;
+const readFileSync = require('fs').readFileSync; 
 const stdio = require('./stdio'); 
 const yaml = require('yaml');
+
+// if node was started with a provided path to .yaml directory, retrieve files locally
+const PSET_YML = process.env.PSET_YML; 
 
 const PREPEND = 'public class ZS50Exception extends Exception{ }';
 const TRY_START = '\ntry{\n'; 
 const TRY_END = '\n} catch(Exception e){\nthrow new ZS50Exception(e.getMessage());\n}'; 
 
-// instantiate var for psets, and get them
-const location = require('./config').psetUrl; 
-let psets;
+// instantiate vars for pset base directory and psetYaml
+const baseDir = require('./config').psetUrl; 
+let psetYaml;
 
 class Pset {
 
@@ -50,9 +54,14 @@ function appendPrevalidations(executePrevalidation){
 function appendValidations(validations){
     let ctr = 0; 
     return validations.reduce((prev, curr) => {
-        let val = `\n// validation ${ctr} ${TRY_START} ${curr.execute ? curr.execute : ''}\n${ curr.assert } ${genCatch(curr.invMsg)}\n`;
+        let val = `\n// validation ${ctr} ${TRY_START} ${curr.execute ? curr.execute + '\n': ''} ${ curr.assert ? curr.assert : wrapEvaluate(curr.evaluate, curr.invMsg) } ${genCatch(curr.invMsg)}\n`;
+        ctr++; 
         return prev + val; 
     }, '\n');
+}
+
+function wrapEvaluate(eval, invMsg=`\'Assertion failed: ${eval.split(';')[0]}\'`){
+    return `if(!(${eval.split(';')[0]})){\n throw new ZS50Exception(${invMsg.split(';')[0]}); \n }`;
 }
 
 // uses standard TRY_END if invMsg is undefined or empty
@@ -63,23 +72,36 @@ function genCatch(invMsg){
     return TRY_END.replace('e.getMessage()', `${invMsg.endsWith(';') ? invMsg.split(';')[0] : invMsg }`); 
 }
 
-async function initPsets(){
-    if(psets)
+async function initPset(psetName){
+    if(psetYaml)
         return; 
 
-    try{
-        // get psetfile, disallowing caching
-        const psetFile = await axios.get(location, { headers: { 'Cache-Control': 'no-cache' } }); 
-        psets = yaml.parse(psetFile.data); 
-    } catch(e){
-        throw e; 
+    let psetFile;
+
+    // if running in local mode, get file from relative directory
+    if(PSET_YML){
+        try{
+            psetFile = `${process.cwd()}/${PSET_YML}/${psetName}.yaml`; 
+            stdio.warn(`Retrieving YAML from ${psetFile}`);
+            const yml = readFileSync(psetFile, 'utf-8'); 
+            psetYaml = yaml.parse(yml);
+        } catch(e){
+            throw e; 
+        }
+    } else{
+        try{
+            // get psetfile, disallowing caching
+            psetFile = await axios.get(`${ baseDir.endsWith('/') ? baseDir : basDir + '/' }${psetName}.yaml`, { headers: { 'Cache-Control': 'no-cache' } }); 
+            psetYaml = yaml.parse(psetFile.data); 
+        } catch(e){
+            throw e; 
+        }
     }
 }
 
 module.exports.getPset = async (psetName) => {
     try{
-        await initPsets(); 
-        let psetYaml = psets[psetName];
+        await initPset(psetName); 
         if(!psetYaml)
             throw new Error(`No pset found for argument ${psetName}`);
 

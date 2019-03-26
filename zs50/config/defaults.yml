@@ -6,8 +6,8 @@ apiVersion: "45.0"
 # May be 'local' if source Apex will be written locally, or 'cloud' if source should be retrieved from authorized Salesforce dev org
 mode: "local"
 
-# Location of psets.yaml file that defines how psets will be checked; typically a github raw url
-psetUrl: "https://raw.githubusercontent.com/alpha-bytes/zs50-content/master/psets/psets.yaml"
+# Base direcotry of pset yaml files; typically a github raw url or gist
+psetUrl: "https://raw.githubusercontent.com/alpha-bytes/zs50-content/master/psets/"
 
 # direcotry where local classes are stored, relative to present working directory. "./" should not be included as it is implicit
 classDir: "classes"
