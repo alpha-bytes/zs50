@@ -12,6 +12,9 @@ module.exports = async function(psetName, options) {
         pset = await psets.getPset(psetName);
     } catch(e){
         stdio.err(`Could not retrieve pset validations due to exception: ${e.message}`); 
+        if(options.verbose)
+            stdio.warn(e);
+
         process.exit(1);
     }
 
@@ -31,6 +34,7 @@ module.exports = async function(psetName, options) {
         process.exit(0); 
     } catch(e){
         if(e.requiresAuth){
+            // TODO implement event emitter for invalid auth
             stdio.warn(e.message); 
             process.exit(0);
         }
