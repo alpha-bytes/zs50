@@ -16,6 +16,12 @@ function handleErr(err){
 
 module.exports.getAuthStatus = (options) => {
 
+    // check to ensure -o not used on its own
+    if(options.overwrite && !options.reauth){
+        stdio.warn('The -o flag may only be used in conjunction with -r, as in "zs50 auth -ro"'); 
+        process.exit(1);
+    }
+
 	// if reauth called explicitly, set it off
 	if(options.reauth){
         auth.setCredentials(options.overwrite).then(handleSuccess).catch(handleErr); 
