@@ -18,7 +18,7 @@ module.exports.getAuthStatus = (options) => {
 
 	// if reauth called explicitly, set it off
 	if(options.reauth){
-        auth.setCredentials().then(handleSuccess).catch(handleErr); 
+        auth.setCredentials(options.overwrite).then(handleSuccess).catch(handleErr); 
         return;
     }
 

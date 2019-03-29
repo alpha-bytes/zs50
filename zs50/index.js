@@ -15,8 +15,9 @@ module.exports = () => {
 
 	program
 		.command('auth')
-		.description('Provides information on authorization status of linked org.')
-		.option('-r, --reauth', 'Overwrite existing authorization with new credentials.')
+		.description('Check and refresh authorization for linked dev org.')
+		.option('-r, --reauth', 'Refresh authorization for linked dev org.')
+		.option('-o, --overwrite', 'Overwrite existing credentials with new ones.')
 		.action(auth.getAuthStatus);
 
 	program

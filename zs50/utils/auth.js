@@ -37,16 +37,20 @@ class AuthEmitter extends events {
      * Returns a Promise that will be resolved upon successful authorization. 
      * @returns {Promise}
      */
-    async setCredentials(){
-        let creds = {};  
-        try{
-            creds.uname = await stdio.prompt('Salesforce Username: ', inputValidator); 
-            creds.pwd = await stdio.pwd('Salesforce Password: ', inputValidator); 
-            creds.sec_token = await stdio.prompt('Security Token: ', inputValidator); 
-        } catch(e){
-            stdio.err(`${e.message} Exiting process.`); 
-            process.exit(1);
+    async setCredentials(overwrite=false){
+        // set creds to auth and conditionally obtain new credentials
+        let creds = auth ? auth : {};
+        if(overwrite || this.authReq || !creds.uname){
+            try{
+                creds.uname = await stdio.prompt('Salesforce Username: ', inputValidator); 
+                creds.pwd = await stdio.pwd('Salesforce Password: ', inputValidator); 
+                creds.sec_token = await stdio.prompt('Security Token: ', inputValidator); 
+            } catch(e){
+                stdio.err(`${e.message} Exiting process.`); 
+                process.exit(1);
+            }
         }
+        
         stdio.highlight('Authorizing Salesforce Org...');
         return authorize(creds);   
     }
