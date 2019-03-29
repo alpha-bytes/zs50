@@ -5,7 +5,7 @@ const fs = require('fs');
 const stdio = require('../utils/stdio'); 
 const oauth = require('../config/oauth'); 
 
-const ENV_PATH = `${__dirname.replace('utils', 'config')}/.zs50.env`; 
+const ENV_PATH = `${process.cwd()}/.zs50.env`; 
 let auth; 
 
 class AuthEmitter extends events { 
