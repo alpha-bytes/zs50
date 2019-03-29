@@ -1,5 +1,6 @@
 const colors = require('colors');
 const readline = require('readline');
+const Writeable = require('stream').Writable; 
 
 // config
 const MAX_TRIES = 5; 
@@ -10,11 +11,20 @@ const style_highlight = colors.bgMagenta;
 const style_input = colors.cyan;  
 const style_warn = colors.yellow;
 
-// instantiate interface for collecting user input
+// instantiate interface for collecting user input, including a Writable stream to mask password input
+let mask = false; 
+let mutable = new Writeable({
+    write: (chunk, encoding, callback) => {
+        if(!mask)
+            process.stdout.write(chunk, encoding); 
+        callback(); 
+    }
+}); 
 process.stdin.setEncoding('utf-8');
 const rl = readline.createInterface({
 	input: process.stdin, 
-	output: process.stdout
+    output: mutable, 
+    terminal: true
 });
 
 /**
@@ -64,18 +74,31 @@ module.exports.err = (msg) => {
     return stdio(msg, style_err); 
 }
 
+module.exports.pwd = async (msg='Password: ', validator) => {
+    mask = false;
+    // print request but do not await input
+    process.stdout.write(style_input(msg)); 
+    // mask input, then request password again
+    mask = true; 
+    return stdio(msg, style_input, true, validator); 
+}
+
 module.exports.prompt = (msg, validator) => {
+    mask = false; 
     return stdio(msg, style_input, true, validator); 
 }
 
 module.exports.highlight = (msg) => {
+    mask = false; 
     return stdio(msg, style_highlight); 
 }
 
 module.exports.success = (msg = 'Success!') => {
+    mask = false; 
     return stdio(msg, colors.green); 
 }
 
 module.exports.warn = (msg) => {
+    mask = false; 
     return stdio(msg, style_warn); 
 }

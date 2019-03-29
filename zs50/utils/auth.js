@@ -41,7 +41,7 @@ class AuthEmitter extends events {
         let creds = {};  
         try{
             creds.uname = await stdio.prompt('Salesforce Username: ', inputValidator); 
-            creds.pwd = await stdio.prompt('Salesforce Password: ', inputValidator); 
+            creds.pwd = await stdio.pwd('Salesforce Password: ', inputValidator); 
             creds.sec_token = await stdio.prompt('Security Token: ', inputValidator); 
         } catch(e){
             stdio.err(`${e.message} Exiting process.`); 
@@ -97,7 +97,7 @@ async function authorize(creds){
             });
         })
         .catch((err) => {
-            console.log(err.response.data); 
+            stdio.err(err.response.data); 
             process.exit(1); 
         });
     });
