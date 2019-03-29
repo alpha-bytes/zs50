@@ -4,7 +4,7 @@ const stdio = require('./stdio');
 const yaml = require('yaml');
 
 // if node was started with a provided path to .yaml directory, retrieve files locally
-const PSET_YML = process.env.PSET_YML; 
+const LOCAL_YML = process.env.LOCAL_YML; 
 
 const PREPEND = 'public class ZS50Exception extends Exception{ }';
 const TRY_START = '\ntry{\n'; 
@@ -79,9 +79,9 @@ async function initPset(psetName){
     let psetFile;
 
     // if running in local mode, get file from relative directory
-    if(PSET_YML){
+    if(LOCAL_YML){
         try{
-            psetFile = `${process.cwd()}/${PSET_YML}/${psetName}.yaml`; 
+            psetFile = `${process.cwd()}/${LOCAL_YML}/${psetName}.yaml`; 
             stdio.warn(`Retrieving YAML from ${psetFile}`);
             const yml = readFileSync(psetFile, 'utf-8'); 
             psetYaml = yaml.parse(yml);
@@ -110,3 +110,11 @@ module.exports.getPset = async (psetName) => {
         throw e; 
     }
 };
+
+// TODO module.exports.evaluate = async (psetName) => {
+// - get ApexBody   
+// - sum all yml validations, and check all validations where methodDependencies exist in apex body
+// - increment each successful validation
+// - IF successfulValidations === sum of all yml validations, success
+// - ELSE return intermediary message
+// - PROMISE.ALL() for granular validation checking (e.g. on exec anon apex per validation?)
