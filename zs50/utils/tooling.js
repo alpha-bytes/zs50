@@ -90,7 +90,7 @@ async function _executeAnonApex(anonApex){
                 'Content-Type': 'application/json'
             }
         }); 
-        const data = resp.data;  
+        const data = resp.data;
         if(data.compiled && data.success){
             return data; 
         } else{
@@ -99,10 +99,19 @@ async function _executeAnonApex(anonApex){
             throw e; 
         }
     } catch(e){
+        // if self-thrown above, just return
         if(e.salesforceResponse)   
             throw e; 
 
-        throw new Error(`Unable to execute Apex due to the following error: ${e.message}`);
+        let err = new Error('Unable to execute Apex: '); 
+        if(e.response){
+            err.message += `Status Code ${e.response.status} - ${e.response.statusText}`;
+            err.salesforceResponse = e.response;
+        } else{
+            err.message += e.message; 
+        }
+        
+        throw err; 
     }
 }
 
