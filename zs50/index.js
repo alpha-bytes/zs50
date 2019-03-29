@@ -1,6 +1,7 @@
 const auth = require('./commands/auth');  
 const check = require('./commands/check');
 const program = require('commander'); 
+const scaf = require('./commands/scaf');
 
 module.exports = () => {
 
@@ -17,6 +18,11 @@ module.exports = () => {
 		.description('Provides information on authorization status of linked org.')
 		.option('-r, --reauth', 'Overwrite existing authorization with new credentials.')
 		.action(auth.getAuthStatus);
+
+	program
+		.command('scaf <pset>')
+		.description('Prints to the terminal a scaffolded outline of class for solving the given pset.')
+		.action(scaf);
 		 
 
 	program.parse(process.argv); 
