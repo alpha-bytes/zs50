@@ -81,10 +81,11 @@ async function _getApex(className){
 
 async function _executeAnonApex(anonApex){
     try{
+        let encodedApex = encodeURIComponent(anonApex); 
         let resp = await axios({
             method: 'get',
             baseURL: instance_url, 
-            url: encodeURI(tooling_execAnon.replace('%%', anonApex)), 
+            url: tooling_execAnon.replace('%%', encodedApex), 
             headers: {
                 'Authorization': `Bearer ${access_token}`, 
                 'Content-Type': 'application/json'
