@@ -7,7 +7,7 @@ module.exports = async function(psetName, options) {
     
     let pset; 
 
-    // ensure we have psets for validation
+    // ensure psetName resolves to an actual pset file
     try{
         pset = await psets.getPset(psetName);
     } catch(e){
@@ -18,18 +18,9 @@ module.exports = async function(psetName, options) {
         process.exit(1);
     }
 
-    // read file contents using fs 
-    // append command calls
-    // send to execute anonymous endpoint in Tooling API
-    // evaluate response and report back to user
+    // run validations
     try{
-        stdio.warn(`Retrieving ${pset.apexName} class from ${ config.mode === 'local' ? 'default local directory...' : 'authorized SF org...' }`);
-        let classBody = await tooling.getApex(pset.apexName); 
-        stdio.warn('Validating assertions in authorized org...');
-        if(options.verbose)
-            stdio.highlight(classBody); 
-
-        let result = await tooling.executeAnonApex(pset.buildAnonTest(classBody)); 
+        await pset.validate(); 
         stdio.success(); 
         process.exit(0); 
     } catch(e){

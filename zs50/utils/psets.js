@@ -1,6 +1,8 @@
 const axios = require('axios').default;
+const config = require('./config');
 const readFileSync = require('fs').readFileSync; 
 const stdio = require('./stdio'); 
+const tooling = require('./tooling');
 const yaml = require('yaml');
 
 // if node was started with a provided path to .yaml directory, retrieve files locally
@@ -17,32 +19,64 @@ let psetYaml;
 class Pset {
 
     constructor(psetYaml){
-        this.apexName = psetYaml.apexName;
+        this.apexClassNames = psetYaml.apexClassNames;
         this.executePrevalidation = psetYaml.executePrevalidation;
         this.globalVars = psetYaml.globalVars; 
         this.scaffold = psetYaml.scaffold; 
         this.validations = psetYaml.validations; 
     }
 
-    buildAnonTest(classBody){
-        let anonBody = `${PREPEND}\n\n${classBody}\n`;
-
-        // append global vars
-        if(this.globalVars)
-            anonBody += '\n// Initialize global-scoped variables\n' + this.globalVars.reduce((prev, curr) => {
-                return prev + curr + '\n'; 
-            }, '\n');
-
-        // append any pre-execution steps, wrapping in try/catch
-        if(this.executePrevalidation)
-            anonBody += `\n// Prevalidation steps\n${TRY_START}${appendPrevalidations(this.executePrevalidation)}${TRY_END}`; 
-
-        // append validations, which self-wrap in try/catch
-        if(this.validations)
-            anonBody += `\n\n// Validations\n${appendValidations(this.validations)}`;
+    // retrieves the specified apex class(es) and runs validations
+    async validate(){
         
-        return anonBody;
+        // ensure classes 
+        if(!this.apexClassNames || this.apexClassNames.length == 0)
+            throw new Error('No Apex classes prescribed in pset.');
+
+        // get each of the class bodies via tooling
+        this.classBodies = ''; 
+        try{
+            for(let className of this.apexClassNames){
+                stdio.warn(`Retrieving ${className} class from ${ config.mode === 'local' ? 'default local directory...' : 'authorized SF org...' }`);
+                this.classBodies += await tooling.getApex(className); 
+                this.classBodies += '\n\n';
+            }
+        } catch(e){
+            throw e; 
+        }
+
+        // construct anonymous body
+        try{
+            stdio.warn('Constructing tests...'); 
+            const anonBody = buildAnonTest(this); 
+            stdio.warn('Validating assertions in authorized org...');
+            await tooling.executeAnonApex(anonBody); 
+        } catch(e){
+            throw e; 
+        }
+
     }
+
+}
+
+function buildAnonTest(pset){
+    let anonBody = `${PREPEND}\n\n${pset.classBodies}\n`;
+
+    // append global vars
+    if(pset.globalVars)
+        anonBody += '\n// Initialize global-scoped variables\n' + pset.globalVars.reduce((prev, curr) => {
+            return prev + curr + '\n'; 
+        }, '\n');
+
+    // append any pre-execution steps, wrapping in try/catch
+    if(pset.executePrevalidation)
+        anonBody += `\n// Prevalidation steps\n${TRY_START}${appendPrevalidations(pset.executePrevalidation)}${TRY_END}`; 
+
+    // append validations, which self-wrap in try/catch
+    if(pset.validations)
+        anonBody += `\n\n// Validations\n${appendValidations(pset.validations)}`;
+    
+    return anonBody;
 }
 
 function appendPrevalidations(executePrevalidation){
@@ -103,7 +137,7 @@ module.exports.getPset = async (psetName) => {
     try{
         await initPset(psetName); 
         if(!psetYaml)
-            throw new Error(`No pset found for argument ${psetName}`);
+            throw new Error(`No pset found for argument ${psetName}. Check case and spelling and try again.`);
 
         return new Pset(psetYaml);  
     } catch(e){
