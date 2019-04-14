@@ -71,7 +71,7 @@ async function _getApex(className){
             if(resp.data.size && resp.data.size == 1 && resp.data.records[0]){
                 return resp.data.records[0].Body; 
             } else{
-                throw new Error(`Unable to retrieve ${className}`); 
+                throw new Error(`Class ${className} was not found in the authorized org.`); 
             }
         } catch(e){
             throw e;  
