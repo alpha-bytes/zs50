@@ -36,10 +36,9 @@ class Pset {
         // get each of the class bodies via tooling
         this.classBodies = ''; 
         try{
-            for(let className of this.apexClassNames){
-                stdio.warn(`Retrieving ${className} class from ${ config.mode === 'local' ? 'default local directory...' : 'authorized SF org...' }`);
-                this.classBodies += await tooling.getApex(className); 
-                this.classBodies += '\n\n';
+            stdio.warn(`Retrieving ${this.apexClassNames.length > 1 ? 'classes' : 'class'} ${this.apexClassNames.join(', ')} from ${ config.mode === 'local' ? 'default local directory...' : 'authorized SF org...' }`);
+            for(let classBody of await tooling.getApex(this.apexClassNames)){
+                this.classBodies += `${classBody}\n\n`;
             }
         } catch(e){
             throw e; 
@@ -60,21 +59,21 @@ class Pset {
 }
 
 function buildAnonTest(pset){
-    let anonBody = `${PREPEND}\n\n${pset.classBodies}\n`;
+    let anonBody = `${PREPEND}\n\n/** User Class Implementation(s) **/\n\n${pset.classBodies}\n`;
 
     // append global vars
     if(pset.globalVars)
-        anonBody += '\n// Initialize global-scoped variables\n' + pset.globalVars.reduce((prev, curr) => {
+        anonBody += '\n/** Initialize global-scoped variables **/\n' + pset.globalVars.reduce((prev, curr) => {
             return prev + curr + '\n'; 
         }, '\n');
 
     // append any pre-execution steps, wrapping in try/catch
     if(pset.executePrevalidation)
-        anonBody += `\n// Prevalidation steps\n${TRY_START}${appendPrevalidations(pset.executePrevalidation)}${TRY_END}`; 
+        anonBody += `\n/** Prevalidation steps **/\n${TRY_START}${appendPrevalidations(pset.executePrevalidation)}${TRY_END}`; 
 
     // append validations, which self-wrap in try/catch
     if(pset.validations)
-        anonBody += `\n\n// Validations\n${appendValidations(pset.validations)}`;
+        anonBody += `\n\n/** Validations **/\n${appendValidations(pset.validations)}`;
     
     return anonBody;
 }
