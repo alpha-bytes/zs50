@@ -5,6 +5,9 @@ const scaf = require('./commands/scaf');
 
 module.exports = () => {
 
+	/** version */
+	program.version('0.10.0');
+
 	/** define program commands */
 	program
 		.command('check <pset>')
