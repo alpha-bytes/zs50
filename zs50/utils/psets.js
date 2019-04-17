@@ -39,7 +39,16 @@ class Pset {
         try{
             stdio.warn(`Retrieving ${this.apexClassNames.length > 1 ? 'classes' : 'class'} ${this.apexClassNames.join(', ')} from ${ config.mode === 'local' ? 'default local directory...' : 'authorized SF org...' }`);
             for(let apexClass of await tooling.getApex(this.apexClassNames)){
-                this.classBodies += `${apexClass.body}\n\n`;
+                // replace any instances of static methods with static global-level variables, 
+                // and remove the static method keywords, such that apex class calls to static methods
+                // are immitated
+                const name = apexClass.name; 
+                let body = apexClass.body; 
+                if(apexClass.body.indexOf(' static ') != -1){
+                    this.globalVars.push(`static ${name} ${name} = new ${name}();`);
+                    body = body.replace(new RegExp(/ static /, 'gi'), ' '); 
+                }
+                this.classBodies += `${body}\n\n`;
             }
         } catch(e){
             throw e; 
@@ -68,7 +77,7 @@ function buildAnonTest(pset){
     
     // append global vars
     if(pset.globalVars)
-        anonBody += '\n/** Initialize global-scoped variables **/\n' + pset.globalVars.reduce((prev, curr) => {
+        anonBody += '\n/** Initialize global-scoped variables and mimic/shadow any static method declarations **/\n' + pset.globalVars.reduce((prev, curr) => {
             return prev + curr + '\n'; 
         }, '\n');
 
