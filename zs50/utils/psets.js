@@ -21,6 +21,7 @@ class Pset {
     constructor(psetYaml){
         this.apexClassNames = psetYaml.apexClassNames;
         this.executePrevalidation = psetYaml.executePrevalidation;
+        this.commitDml = psetYaml.commitDml ? psetYaml.commitDml : false; 
         this.globalVars = psetYaml.globalVars; 
         this.scaffold = psetYaml.scaffold; 
         this.validations = psetYaml.validations; 
@@ -61,6 +62,10 @@ class Pset {
 function buildAnonTest(pset){
     let anonBody = `${PREPEND}\n\n/** User Class Implementation(s) **/\n\n${pset.classBodies}\n`;
 
+    // conditionally set db savepoint
+    if(!pset.commitDml)
+        anonBody += '\n/** Set Savepoint for rollback **/\n\nSavepoint sp = Database.setSavepoint();\n';
+    
     // append global vars
     if(pset.globalVars)
         anonBody += '\n/** Initialize global-scoped variables **/\n' + pset.globalVars.reduce((prev, curr) => {
@@ -74,7 +79,11 @@ function buildAnonTest(pset){
     // append validations, which self-wrap in try/catch
     if(pset.validations)
         anonBody += `\n\n/** Validations **/\n${appendValidations(pset.validations)}`;
-    
+
+    // conditionally rollback to savepoint
+    if(!pset.commitDml)
+        anonBody += '\n/** Rollback to Savepoint **/\n\nDatabase.rollback(sp);'
+
     return anonBody;
 }
 
