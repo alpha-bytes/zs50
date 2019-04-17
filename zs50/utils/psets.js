@@ -45,8 +45,8 @@ class Pset {
                 const name = apexClass.name; 
                 let body = apexClass.body; 
                 if(apexClass.body.indexOf(' static ') != -1){
-                    this.globalVars.push(`static ${name} ${name} = new ${name}();`);
-                    body = body.replace(new RegExp(/ static /, 'gi'), ' '); 
+                    this.globalVars.push(`// mimic static method(s) in class ${name}\nstatic ${name} ${name} = new ${name}();`);
+                    body = body.replace(new RegExp(/ static /, 'gi'), ` /** static method mimicked by var '${name}' **/ `); 
                 }
                 this.classBodies += `${body}\n\n`;
             }
