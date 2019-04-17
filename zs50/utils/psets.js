@@ -22,7 +22,7 @@ class Pset {
         this.apexClassNames = psetYaml.apexClassNames;
         this.executePrevalidation = psetYaml.executePrevalidation;
         this.commitDml = psetYaml.commitDml ? psetYaml.commitDml : false; 
-        this.globalVars = psetYaml.globalVars; 
+        this.globalVars = psetYaml.globalVars ? psetYaml.globalVars : []; 
         this.scaffold = psetYaml.scaffold; 
         this.validations = psetYaml.validations; 
     }
@@ -38,8 +38,8 @@ class Pset {
         this.classBodies = ''; 
         try{
             stdio.warn(`Retrieving ${this.apexClassNames.length > 1 ? 'classes' : 'class'} ${this.apexClassNames.join(', ')} from ${ config.mode === 'local' ? 'default local directory...' : 'authorized SF org...' }`);
-            for(let classBody of await tooling.getApex(this.apexClassNames)){
-                this.classBodies += `${classBody}\n\n`;
+            for(let apexClass of await tooling.getApex(this.apexClassNames)){
+                this.classBodies += `${apexClass.body}\n\n`;
             }
         } catch(e){
             throw e; 

@@ -10,7 +10,7 @@ let access_token, instance_url;
 const REQ_MSG = 'Org authorization required. Use command "zs50 auth -r" to authorize a Salesforce dev org.';
 /* tooling api endpoints */
 const tooling_base = `services/data/v${config.apiVersion}/tooling`; 
-const tooling_query = `${tooling_base}/query?q=SELECT body FROM ApexClass WHERE name IN (%%)`;
+const tooling_query = `${tooling_base}/query?q=SELECT Body, Name FROM ApexClass WHERE name IN (%%)`;
 const tooling_execAnon = `${tooling_base}/executeAnonymous?anonymousBody=%%`; 
 
 // TODO event emitter / subscriber for any axios response which fails due to auth, and refresh the token
@@ -48,19 +48,24 @@ function validateAuth(){
 }
 
 async function _getApex(classNames){
-    // if mode set to local, attempt retrieval from default dir
-    let classBodies = []; 
+    
+    let classes = []; 
+    
+    // retrieve classes from local
     if(config.mode === 'local' && config.classDir){
         let classLoc; 
         try{
             for(let className of classNames){
                 classLoc = `${process.cwd()}/${config.classDir.replace('./', '')}/${className}.cls`;
-                classBodies.push(readFileSync(classLoc, 'utf-8'));
+                classes.push({ name: className, body: readFileSync(classLoc, 'utf-8') });
             }
         } catch(e){
-            throw new Error(`Could not retrieve ${classLoc}: ${e.message}`); 
+            // do nothing, let final conditional block throw the error
         }
-    } else{
+    } 
+    
+    // retrieve classes from authorized org
+    if(config.mode === 'cloud'){
         try{
             const retrUrl = encodeURI(tooling_query.replace('%%', classNames.reduce((prev, curr) =>{
                 if(prev)
@@ -77,21 +82,25 @@ async function _getApex(classNames){
                     'Content-Type': 'application/json'
                 }
             });
-            if(resp.data.size && resp.data.size == 1 && resp.data.records){
+            if(resp.data.records){
                 for(let record of resp.data.records)
-                    classBodies.push(record.Body); 
+                    classes.push({ name: record.Name, body: record.Body });
 
-                // ensure all classes retrieved
-                if(classBodies.length != classNames.length){
-                    throw new Error(`One or more of the requested class(es) (${classNames.join(', ')}) was not found in the authorized org.`); 
-                }
+            } else {
+                throw new Error(`One or more of the requested class(es) (${classNames.join(', ')}) was not found in the authorized org.`); 
             }
         } catch(e){
             throw e;  
         }
     }
 
-    return classBodies;
+    // last check to ensure all classes present
+    if(classes.length != classNames.length){
+        let retreived = classes.map(x => x.name); 
+        throw new Error(`Could not find Class(es) ${ classNames.filter(className => retreived.indexOf(className) === -1).join(', ')} ${ config.mode === 'local' ? 'in the local directory' : 'in the authorized org' }.`);
+    }
+    
+    return classes;
 }
 
 async function _executeAnonApex(anonApex){

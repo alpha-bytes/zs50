@@ -6,7 +6,7 @@ const scaf = require('./commands/scaf');
 module.exports = () => {
 
 	/** version */
-	program.version('0.11.0', '-v, --version');
+	program.version('0.11.1', '-v, --version');
 
 	/** define program commands */
 	program
