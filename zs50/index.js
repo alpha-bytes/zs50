@@ -6,13 +6,12 @@ const scaf = require('./commands/scaf');
 module.exports = () => {
 
 	/** version */
-	program.version('0.12.1', '-v, --version');
+	program.version('0.12.2', '-v, --version');
 
 	/** define program commands */
 	program
 		.command('check <pset>')
 		.description('Validates code for the provided pset and returns results.')
-		.option('-r, --root-directory <path>', 'If the pset Apex files are stored locally, as when using the SFDX flow, the path to the source files.')
 		.option('-v, --verbose', 'Turns on verbose debugging.')
 		.action(check); 
 
