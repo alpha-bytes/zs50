@@ -6,13 +6,13 @@ const scaf = require('./commands/scaf');
 module.exports = () => {
 
 	/** version */
-	program.version('0.12.2', '-v, --version');
+	program.version('0.12.3', '-v, --version');
 
 	/** define program commands */
 	program
 		.command('check <pset>')
 		.description('Validates code for the provided pset and returns results.')
-		.option('-v, --verbose', 'Turns on verbose debugging.')
+		.option('--verbose', 'Turns on verbose debugging.')
 		.action(check); 
 
 	program
