@@ -2,4 +2,3 @@ classes/*
 node_modules
 *.env
 .psetyml/*
-.vscode
