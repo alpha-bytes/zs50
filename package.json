@@ -12,7 +12,7 @@
     "zs50": "bin/zs50"
   },
   "dependencies": {
-    "axios": "^0.18.0",
+    "axios": "^0.18.1",
     "child_process": "^1.0.2",
     "colors": "^1.3.3",
     "commander": "^2.19.0",
